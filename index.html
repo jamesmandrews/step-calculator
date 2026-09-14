@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step Calculator</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --border: #e2e1dc;
+    --text: #1c1c1a;
+    --muted: #6b6a65;
+    --accent: #2f6f4f;
+    --accent-soft: #e8f1ec;
+    --warn: #8a5a1a;
+    --warn-soft: #fbf3e6;
+    --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15161a;
+      --surface: #1e1f24;
+      --border: #34363d;
+      --text: #e8e8e6;
+      --muted: #9a9a96;
+      --accent: #6fbf94;
+      --accent-soft: #1d2a24;
+      --warn: #d7a75c;
+      --warn-soft: #2a2318;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 2.5rem 1.25rem 4rem;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; gap: 2rem; }
+    .explainer { order: 2; }
+    .calculator { order: 1; }
+  }
+
+  h1 { font-size: 1.75rem; margin: 0 0 .4rem; letter-spacing: -.025em; }
+  .sub { color: var(--muted); margin: 0 0 2rem; font-size: 1rem; }
+
+  h2 {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--muted);
+    margin: 0 0 .9rem;
+    font-weight: 600;
+  }
+
+  /* ---- Explainer column ---- */
+  .explainer h3 {
+    font-size: 1.02rem;
+    margin: 2rem 0 .5rem;
+    letter-spacing: -.01em;
+  }
+  .explainer h3:first-of-type { margin-top: 0; }
+  .explainer p { margin: 0 0 .85rem; font-size: .93rem; color: var(--muted); }
+  .explainer p strong, .explainer li strong { color: var(--text); font-weight: 600; }
+  .explainer ul { margin: 0 0 .85rem; padding-left: 1.1rem; }
+  .explainer li { font-size: .93rem; color: var(--muted); margin-bottom: .5rem; }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: .88rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 7px 7px 0;
+    padding: .7rem .9rem;
+    margin: 0 0 1rem;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: .08em .35em;
+    border-radius: 4px;
+    color: var(--text);
+  }
+
+  /* ---- Calculator column ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .3rem; }
+
+  input[type="number"], select {
+    width: 100%;
+    padding: .55rem .65rem;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  .pair { display: flex; }
+  .pair input { flex: 1; min-width: 0; border-radius: 7px 0 0 7px; border-right: none; }
+  .pair .unit {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 0 .7rem;
+    font-size: .85rem;
+    color: var(--muted);
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 0 7px 7px 0;
+  }
+
+  /* Metric / imperial segmented control */
+  .unitbar {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    margin-bottom: 1rem;
+  }
+  .unitbar button {
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 500;
+    padding: .35rem 1rem;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .unitbar button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--surface);
+  }
+  @media (prefers-color-scheme: dark) {
+    .unitbar button[aria-pressed="true"] { color: #15161a; }
+  }
+
+  .hint { font-size: .75rem; color: var(--muted); margin-top: .3rem; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .stat { background: var(--surface); padding: .9rem 1rem; }
+  .stat .k { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .stat .v {
+    font-size: 1.45rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.025em;
+    margin-top: .15rem;
+  }
+  .stat .u { font-size: .82rem; font-weight: 400; color: var(--muted); margin-left: .15rem; }
+
+  .highlight { background: var(--accent-soft); }
+  .highlight .v { color: var(--accent); }
+
+  .bigresult {
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    margin-top: 1rem;
+  }
+  .bigresult .k { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .bigresult .v {
+    font-size: 2.1rem;
+    font-weight: 650;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.03em;
+    line-height: 1.15;
+  }
+  .bigresult .v .u { font-size: .95rem; font-weight: 400; color: var(--muted); margin-left: .3rem; letter-spacing: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: .45rem .4rem; border-bottom: 1px solid var(--border); font-size: .88rem; }
+  th { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+  th:first-child, td:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.adj { color: var(--muted); }
+
+  .note {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: .7rem .9rem;
+    border-radius: 0 6px 6px 0;
+    font-size: .84rem;
+    color: var(--muted);
+    margin-top: 1rem;
+  }
+  .note strong { color: var(--warn); }
+
+  .toggle { display: flex; align-items: center; gap: .5rem; font-size: .84rem; color: var(--muted); margin-top: .9rem; }
+  .toggle input { accent-color: var(--accent); width: 1rem; height: 1rem; }
+
+  .preset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: .6rem;
+  }
+  .preset button {
+    font: inherit;
+    font-size: .78rem;
+    padding: .3rem .6rem;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .preset button:hover { color: var(--text); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ============ LEFT: explanation ============ -->
+  <section class="explainer">
+    <h1>Step Calculator</h1>
+    <p class="sub">Steps to distance, distance to calories, calories to weight. No age input — age isn't in the equation.</p>
+
+    <h3>Where "10,000 steps" came from</h3>
+    <p>
+      Not a study. A 1965 Japanese pedometer was sold as the <em>manpo-kei</em> — literally
+      "10,000-step meter." The name was marketing, the number stuck, and sixty years later
+      it's treated as a clinical threshold.
+    </p>
+    <p>
+      The "personalized step target for your age and weight" calculators in ads are usually
+      running this same reverse calculation backwards from a calorie figure, then presenting
+      the result as a formula. This page runs that calculation too — it just shows you the
+      formula instead of hiding it.
+    </p>
+
+    <h3>What actually determines the burn</h3>
+    <p>
+      Mass, distance, and gradient. That's it. The ACSM walking equation gives oxygen cost as
+      <code>VO₂ = 0.1·v + 1.8·v·g + 3.5</code> ml/kg/min, where <code>v</code> is speed in
+      m/min and <code>g</code> is the grade. Drop the resting <code>3.5</code> to get net
+      cost, convert to distance, and the speed term cancels out entirely:
+    </p>
+    <p class="formula">net kcal = (0.5 + 9g) × weight_kg × km</p>
+    <p>On flat ground that collapses to the familiar <code>0.5 × kg × km</code>. Two things fall out of this that most step advice gets wrong:</p>
+    <ul>
+      <li>
+        <strong>Pace doesn't change calories per step.</strong> Walking briskly burns the same
+        energy per kilometer as strolling — you just finish sooner. Speed only matters for
+        time-based targets, or once you cross into running.
+      </li>
+      <li>
+        <strong>Incline is the real multiplier.</strong> A 5% grade nearly doubles the cost
+        per meter. Hills beat hustle.
+      </li>
+      <li>
+        <strong>Age does nothing here.</strong> Moving mass over distance is mechanics. Age
+        affects how a walk <em>feels</em> — heart rate, recovery, joint tolerance — not the
+        work performed.
+      </li>
+    </ul>
+
+    <h3>Net, not gross</h3>
+    <p>
+      This page reports <strong>net</strong> calories — energy spent above resting. Gross
+      figures are bigger and look better in marketing, but they include the calories you'd
+      have burned sitting on the sofa. Subtracting those from your intake counts them twice.
+    </p>
+
+    <h3>Calories to actual weight</h3>
+    <p>
+      Roughly <code>7,700 kcal ≈ 1 kg</code> of fat (the "3,500 calories per pound" rule).
+      It holds for a few weeks, then degrades: a lighter body burns less doing the identical
+      walk, and appetite compensates. Real loss bends away from the straight line — which is
+      why the table below shows both the naive projection and a decayed one.
+    </p>
+    <p>
+      There is no step count that "unlocks" fat loss. More steps burn more calories, on a
+      near-linear curve. The threshold framing is invented.
+    </p>
+
+    <h3>Limits</h3>
+    <p>
+      Valid for walking at about 3–6 km/h on measured ground. Running costs more per meter
+      (~1 kcal/kg/km). Stride length is estimated from height at the standard 0.414 ratio —
+      override it if you've actually measured yours, since distance error propagates straight
+      into every number on this page.
+    </p>
+  </section>
+
+  <!-- ============ RIGHT: calculator ============ -->
+  <section class="calculator">
+
+    <div class="unitbar" role="group" aria-label="Unit system">
+      <button type="button" data-system="metric" aria-pressed="true">Metric</button>
+      <button type="button" data-system="imperial" aria-pressed="false">Imperial</button>
+    </div>
+
+    <div class="card">
+      <h2>You</h2>
+      <div class="grid">
+        <div>
+          <label for="weight">Body weight</label>
+          <div class="pair">
+            <input type="number" id="weight" value="77" min="20" step="1">
+            <span class="unit" id="weightUnit">kg</span>
+          </div>
+        </div>
+
+        <div>
+          <label for="height">Height</label>
+          <div class="pair">
+            <input type="number" id="height" value="178" min="20" step="1">
+            <span class="unit" id="heightUnit">cm</span>
+          </div>
+          <div class="hint" id="strideHint"></div>
+        </div>
+
+        <div>
+          <label for="steps">Steps per day</label>
+          <input type="number" id="steps" value="10000" min="0" step="500">
+        </div>
+
+        <div>
+          <label for="grade">Average incline</label>
+          <select id="grade">
+            <option value="0" selected>Flat (0%)</option>
+            <option value="0.02">Gentle (2%)</option>
+            <option value="0.05">Rolling hills (5%)</option>
+            <option value="0.10">Steep (10%)</option>
+          </select>
+          <div class="hint" id="gradeHint"></div>
+        </div>
+      </div>
+
+      <div class="toggle">
+        <input type="checkbox" id="manualStride">
+        <label for="manualStride" style="margin:0">I've measured my stride length</label>
+      </div>
+      <div class="grid" id="strideRow" hidden style="margin-top:.75rem">
+        <div>
+          <label for="stride">Stride length</label>
+          <div class="pair">
+            <input type="number" id="stride" value="0.74" min="0.1" step="0.01">
+            <span class="unit" id="strideUnit">m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Steps &rarr; calories</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="k">Distance</div>
+          <div class="v" id="outDist">—<span class="u" id="outDistU"></span></div>
+        </div>
+        <div class="stat highlight">
+          <div class="k">Net burn</div>
+          <div class="v" id="outKcal">—<span class="u">kcal</span></div>
+        </div>
+        <div class="stat">
+          <div class="k">Walking time</div>
+          <div class="v" id="outTime">—<span class="u">min</span></div>
+        </div>
+        <div class="stat">
+          <div class="k">Per 1,000 steps</div>
+          <div class="v" id="outPerK">—<span class="u">kcal</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Calories &rarr; steps</h2>
+      <div class="grid">
+        <div>
+          <label for="targetKcal">Calories I want to burn</label>
+          <input type="number" id="targetKcal" value="500" min="1" step="25">
+          <div class="preset">
+            <button type="button" data-kcal="200">200</button>
+            <button type="button" data-kcal="300">300</button>
+            <button type="button" data-kcal="500">500</button>
+            <button type="button" data-kcal="750">750</button>
+            <button type="button" data-kcal="1000">1000</button>
+          </div>
+        </div>
+        <div>
+          <label>Equivalent food</label>
+          <select id="foodPreset"></select>
+          <div class="hint" id="foodHint"></div>
+        </div>
+      </div>
+
+      <div class="bigresult">
+        <div class="k">Steps required</div>
+        <div class="v" id="outStepsNeeded">—</div>
+        <div class="hint" id="stepsNeededHint"></div>
+      </div>
+      <div class="hint" style="margin-top:.6rem">
+        Scales linearly with body weight: the same burn takes fewer steps the heavier you are,
+        because there's more mass to move per step.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Weight change at <span id="stepsEcho">10,000</span> steps/day</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Timeframe</th>
+            <th>Deficit</th>
+            <th>Naive</th>
+            <th>Realistic</th>
+          </tr>
+        </thead>
+        <tbody id="projRows"></tbody>
+      </table>
+      <div class="note">
+        <strong>The 3,500-kcal rule decays.</strong> It assumes a fixed 7,700 kcal/kg forever.
+        A lighter body burns less on the same walk and intake creeps up, so real loss flattens
+        below the line — the right-hand column applies a decay factor approximating Hall's
+        dynamic model, landing near half the naive figure at one year.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Steps for a weight-loss rate</h2>
+      <div class="grid">
+        <div>
+          <label for="target">Target loss per week</label>
+          <div class="pair">
+            <input type="number" id="target" value="0.25" min="0.01" step="0.05">
+            <span class="unit" id="targetUnit">kg</span>
+          </div>
+        </div>
+        <div>
+          <label>Steps per day required</label>
+          <div class="v" id="outNeeded" style="font-size:1.45rem;font-weight:600;padding-top:.3rem;font-variant-numeric:tabular-nums">—</div>
+          <div class="hint" id="neededHint"></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const KCAL_PER_KG_FAT = 7700;
+  const STRIDE_RATIO = 0.414;      // walking stride as a fraction of height
+  const FLAT_COST = 0.5;           // net kcal per kg per km, zero grade
+  const GRADE_COST = 9;            // added net kcal per kg per km per unit of grade
+  const WALK_SPEED_KMH = 4.8;      // used only to report elapsed time
+  const LB_PER_KG = 2.20462;
+
+  const $ = (id) => document.getElementById(id);
+
+  const els = {
+    weight: $("weight"), weightUnit: $("weightUnit"),
+    height: $("height"), heightUnit: $("heightUnit"),
+    steps: $("steps"), grade: $("grade"),
+    manualStride: $("manualStride"), strideRow: $("strideRow"),
+    stride: $("stride"), strideUnit: $("strideUnit"),
+    targetKcal: $("targetKcal"), foodPreset: $("foodPreset"),
+    target: $("target"), targetUnit: $("targetUnit")
+  };
+
+  // One switch drives every unit on the page. Each entry describes how to
+  // convert that field's displayed value between the two systems.
+  const FIELDS = [
+    { el: els.weight, unit: els.weightUnit, metric: "kg", imperial: "lb",  factor: LB_PER_KG,  dp: 1 },
+    { el: els.height, unit: els.heightUnit, metric: "cm", imperial: "in",  factor: 1 / 2.54,   dp: 1 },
+    { el: els.stride, unit: els.strideUnit, metric: "m",  imperial: "ft",  factor: 1 / 0.3048, dp: 2 },
+    { el: els.target, unit: els.targetUnit, metric: "kg", imperial: "lb",  factor: LB_PER_KG,  dp: 2 }
+  ];
+
+  let imperial = false;
+
+  // Portion sizes are the point here — "a slice of pizza" is meaningless without
+  // one. Values are typical published figures; real items vary by brand.
+  const FOODS = [
+    { group: "Drinks", name: "Mini can of soda",   kcal:  72, metric: "160 ml", imperial: "5.4 fl oz" },
+    { group: "Drinks", name: "Can of soda",        kcal: 150, metric: "355 ml", imperial: "12 fl oz" },
+    { group: "Drinks", name: "Beer",               kcal: 205, metric: "473 ml", imperial: "1 US pint", note: "5% ABV lager" },
+    { group: "Drinks", name: "Glass of wine",      kcal: 125, metric: "148 ml", imperial: "5 fl oz",   note: "12% ABV red" },
+    { group: "Drinks", name: "Latte, whole milk",  kcal: 220, metric: "473 ml", imperial: "16 fl oz" },
+    { group: "Drinks", name: "Milkshake",          kcal: 530, metric: "473 ml", imperial: "16 fl oz",  note: "vanilla, fast-food" },
+    { group: "Food",   name: "Handful of almonds", kcal: 170, metric: "30 g",   imperial: "1 oz",      note: "about 23 nuts" },
+    { group: "Food",   name: "Chocolate bar",      kcal: 240, metric: "45 g",   imperial: "1.6 oz" },
+    { group: "Food",   name: "Glazed donut",       kcal: 250, metric: "60 g",   imperial: "2.1 oz" },
+    { group: "Food",   name: "Plain bagel",        kcal: 270, metric: "100 g",  imperial: "3.5 oz",    note: "no spread" },
+    { group: "Food",   name: "Slice of pizza",     kcal: 285, metric: "110 g",  imperial: "3.9 oz",    note: "1/8 of a 14in pie" },
+    { group: "Food",   name: "Large fries",        kcal: 480, metric: "150 g",  imperial: "5.3 oz" },
+    { group: "Food",   name: "Fast-food burger",   kcal: 520, metric: "200 g",  imperial: "7 oz",      note: "quarter-pounder with cheese" }
+  ];
+
+  const portion = (f) => imperial ? f.imperial : f.metric;
+
+  // Rebuilt on every unit switch so portions track the chosen system.
+  function buildFoodOptions() {
+    const keep = els.foodPreset.value;
+    const groups = [...new Set(FOODS.map((f) => f.group))];
+
+    els.foodPreset.innerHTML =
+      '<option value="">— pick one to fill above —</option>' +
+      groups.map((g) => {
+        const opts = FOODS
+          .map((f, idx) => [f, idx])
+          .filter(([f]) => f.group === g)
+          .map(([f, idx]) => `<option value="${idx}">${f.name}, ${portion(f)} — ${f.kcal} kcal</option>`)
+          .join("");
+        return `<optgroup label="${g}">${opts}</optgroup>`;
+      }).join("");
+
+    els.foodPreset.value = keep;
+    renderFoodHint();
+  }
+
+  function renderFoodHint() {
+    const f = FOODS[els.foodPreset.value];
+    $("foodHint").textContent = f && f.note ? f.note : "";
+  }
+
+  const num = (el, fallback) => {
+    const v = parseFloat(el.value);
+    return Number.isFinite(v) && v > 0 ? v : fallback;
+  };
+
+  const fmt = (n, dp = 0) =>
+    n.toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp });
+
+  // Metric is the internal unit for every calculation; display converts on the way out.
+  function readInputs() {
+    const weightKg = imperial
+      ? num(els.weight, 170) / LB_PER_KG
+      : num(els.weight, 77);
+
+    const heightM = imperial
+      ? num(els.height, 70) * 0.0254
+      : num(els.height, 178) / 100;
+
+    const strideM = els.manualStride.checked
+      ? (imperial ? num(els.stride, 2.42) * 0.3048 : num(els.stride, 0.74))
+      : heightM * STRIDE_RATIO;
+
+    return {
+      weightKg,
+      heightM,
+      strideM,
+      steps: Math.max(0, parseFloat(els.steps.value) || 0),
+      grade: parseFloat(els.grade.value) || 0
+    };
+  }
+
+  // Display helpers, all driven by the single `imperial` flag.
+  const distUnit = () => imperial ? "mi" : "km";
+  const toDist = (km) => imperial ? km * 0.621371 : km;
+  const massUnit = () => imperial ? "lb" : "kg";
+  const toMass = (kg) => imperial ? kg * LB_PER_KG : kg;
+
+  const costPerKgKm = (grade) => FLAT_COST + GRADE_COST * grade;
+
+  // Hall's dynamic model: sustained loss decays toward a plateau rather than
+  // tracking the linear 7700 kcal/kg line. This approximates that curve —
+  // ~85% of naive at 1 month, ~50% at 1 year.
+  function realisticFactor(days) {
+    const TAU = 250; // days; sets how fast the curve flattens
+    return (TAU / days) * (1 - Math.exp(-days / TAU));
+  }
+
+  function renderDaily(inp) {
+    const km = inp.steps * inp.strideM / 1000;
+    const kcalPerDay = costPerKgKm(inp.grade) * inp.weightKg * km;
+
+    $("outDist").firstChild.nodeValue = fmt(toDist(km), 2);
+    $("outDistU").textContent = distUnit();
+    $("outKcal").firstChild.nodeValue = fmt(kcalPerDay);
+    $("outTime").firstChild.nodeValue = fmt((km / WALK_SPEED_KMH) * 60);
+    $("outPerK").firstChild.nodeValue = inp.steps > 0
+      ? fmt(kcalPerDay / (inp.steps / 1000), 1)
+      : "0";
+
+    $("stepsEcho").textContent = fmt(inp.steps);
+    return kcalPerDay;
+  }
+
+  function renderStrideHints(inp) {
+    const strideText = imperial
+      ? `${fmt(inp.strideM / 0.3048, 2)} ft`
+      : `${fmt(inp.strideM * 100, 0)} cm`;
+
+    // In imperial the height box takes plain inches, so echo back feet-and-inches.
+    const heightText = imperial
+      ? ` · height ${Math.floor(inp.heightM / 0.3048)}′${fmt((inp.heightM / 0.0254) % 12, 0)}″`
+      : "";
+
+    $("strideHint").textContent = els.manualStride.checked
+      ? ""
+      : `Stride ≈ ${strideText}${heightText}`;
+
+    $("gradeHint").textContent = inp.grade > 0
+      ? `${fmt(costPerKgKm(inp.grade) / FLAT_COST, 2)}× the flat-ground burn`
+      : "Pace has no effect on flat ground — only incline does.";
+  }
+
+  // Core inversion: calories ÷ (cost per step) = steps.
+  function renderCaloriesToSteps(inp) {
+    const kcalPerStep = costPerKgKm(inp.grade) * inp.weightKg * inp.strideM / 1000;
+    const wantKcal = num(els.targetKcal, 500);
+    const steps = wantKcal / kcalPerStep;
+
+    if (!Number.isFinite(steps)) {
+      $("outStepsNeeded").textContent = "—";
+      $("stepsNeededHint").textContent = "";
+      return;
+    }
+
+    $("outStepsNeeded").innerHTML =
+      fmt(Math.round(steps / 100) * 100) + ' <span class="u">steps</span>';
+
+    const km = steps * inp.strideM / 1000;
+    const minutes = (km / WALK_SPEED_KMH) * 60;
+    const time = minutes >= 60
+      ? `${fmt(minutes / 60, 1)} h`
+      : `${fmt(minutes)} min`;
+
+    $("stepsNeededHint").textContent =
+      `${fmt(toDist(km), 2)} ${distUnit()} · about ${time} of walking · ${fmt(kcalPerStep * 1000, 1)} kcal per 1,000 steps at your weight`;
+  }
+
+  function renderProjection(inp, kcalPerDay) {
+    const periods = [
+      ["1 week", 7],
+      ["1 month", 30],
+      ["3 months", 91],
+      ["6 months", 182],
+      ["1 year", 365]
+    ];
+
+    $("projRows").innerHTML = periods.map(([label, days]) => {
+      const deficit = kcalPerDay * days;
+      const naive = deficit / KCAL_PER_KG_FAT;
+      const real = naive * realisticFactor(days);
+      return `<tr>
+        <td>${label}</td>
+        <td>${fmt(deficit)}</td>
+        <td>${fmt(toMass(naive), 2)} ${massUnit()}</td>
+        <td class="adj">${fmt(toMass(real), 2)} ${massUnit()}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  function renderRateTarget(inp) {
+    const targetKgPerWeek = imperial
+      ? num(els.target, 0.5) / LB_PER_KG
+      : num(els.target, 0.25);
+
+    const kcalPerStep = costPerKgKm(inp.grade) * inp.weightKg * inp.strideM / 1000;
+    const steps = (targetKgPerWeek * KCAL_PER_KG_FAT / 7) / kcalPerStep;
+
+    if (!Number.isFinite(steps)) {
+      $("outNeeded").textContent = "—";
+      $("neededHint").textContent = "";
+      return;
+    }
+
+    $("outNeeded").textContent = fmt(Math.round(steps / 100) * 100);
+
+    const km = steps * inp.strideM / 1000;
+    $("neededHint").textContent =
+      `${fmt(toDist(km), 1)} ${distUnit()} · about ${fmt(km / WALK_SPEED_KMH, 1)} h of walking every day`;
+  }
+
+  function render() {
+    const inp = readInputs();
+    renderStrideHints(inp);
+    const kcalPerDay = renderDaily(inp);
+    renderCaloriesToSteps(inp);
+    renderProjection(inp, kcalPerDay);
+    renderRateTarget(inp);
+  }
+
+  // Flipping the system converts every entered value, so the person keeps
+  // describing the same body — they just see it in different units.
+  function setSystem(toImperial) {
+    if (toImperial === imperial) return;
+
+    FIELDS.forEach((f) => {
+      const v = parseFloat(f.el.value);
+      if (Number.isFinite(v)) {
+        f.el.value = +(toImperial ? v * f.factor : v / f.factor).toFixed(f.dp);
+      }
+      f.unit.textContent = toImperial ? f.imperial : f.metric;
+    });
+
+    imperial = toImperial;
+
+    // Step sizes that made sense in cm/kg are too coarse or too fine in in/lb.
+    els.height.step = imperial ? 0.5 : 1;
+    els.stride.step = imperial ? 0.05 : 0.01;
+    els.target.step = imperial ? 0.1 : 0.05;
+
+    document.querySelectorAll(".unitbar button").forEach((b) => {
+      b.setAttribute("aria-pressed", String((b.dataset.system === "imperial") === imperial));
+    });
+
+    buildFoodOptions();
+    render();
+  }
+
+  document.querySelectorAll(".unitbar button").forEach((btn) => {
+    btn.addEventListener("click", () => setSystem(btn.dataset.system === "imperial"));
+  });
+
+  els.manualStride.addEventListener("change", () => {
+    els.strideRow.hidden = !els.manualStride.checked;
+    if (els.manualStride.checked) {
+      // Seed the field from the height estimate so the switch is seamless.
+      const m = readInputs().heightM * STRIDE_RATIO;
+      els.stride.value = (imperial ? m / 0.3048 : m).toFixed(2);
+    }
+    render();
+  });
+
+  document.querySelectorAll(".preset button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      els.targetKcal.value = btn.dataset.kcal;
+      els.foodPreset.value = "";
+      renderFoodHint();
+      render();
+    });
+  });
+
+  els.foodPreset.addEventListener("change", () => {
+    const f = FOODS[els.foodPreset.value];
+    if (f) els.targetKcal.value = f.kcal;
+    renderFoodHint();
+    render();
+  });
+
+  document.querySelectorAll("input, select").forEach((el) => {
+    el.addEventListener("input", render);
+  });
+
+  buildFoodOptions();
+  render();
+})();
+</script>
+</body>
+</html>
