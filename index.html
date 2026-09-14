@@ -351,7 +351,7 @@
         <div>
           <label for="weight">Body weight</label>
           <div class="pair">
-            <input type="number" id="weight" value="77" min="20" step="1">
+            <input type="number" id="weight" value="92" min="20" step="1">
             <span class="unit" id="weightUnit">kg</span>
           </div>
         </div>
@@ -359,7 +359,7 @@
         <div>
           <label for="height">Height</label>
           <div class="pair">
-            <input type="number" id="height" value="178" min="20" step="1">
+            <input type="number" id="height" value="170" min="20" step="1">
             <span class="unit" id="heightUnit">cm</span>
           </div>
           <div class="hint" id="strideHint"></div>
@@ -390,7 +390,7 @@
         <div>
           <label for="stride">Stride length</label>
           <div class="pair">
-            <input type="number" id="stride" value="0.74" min="0.1" step="0.01">
+            <input type="number" id="stride" value="0.70" min="0.1" step="0.01">
             <span class="unit" id="strideUnit">m</span>
           </div>
         </div>
@@ -583,15 +583,15 @@
   // Metric is the internal unit for every calculation; display converts on the way out.
   function readInputs() {
     const weightKg = imperial
-      ? num(els.weight, 170) / LB_PER_KG
-      : num(els.weight, 77);
+      ? num(els.weight, 202.8) / LB_PER_KG
+      : num(els.weight, 92);
 
     const heightM = imperial
-      ? num(els.height, 70) * 0.0254
-      : num(els.height, 178) / 100;
+      ? num(els.height, 66.9) * 0.0254
+      : num(els.height, 170) / 100;
 
     const strideM = els.manualStride.checked
-      ? (imperial ? num(els.stride, 2.42) * 0.3048 : num(els.stride, 0.74))
+      ? (imperial ? num(els.stride, 2.31) * 0.3048 : num(els.stride, 0.70))
       : heightM * STRIDE_RATIO;
 
     return {
