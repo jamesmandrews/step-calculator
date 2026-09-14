@@ -268,72 +268,65 @@
   <!-- ============ LEFT: explanation ============ -->
   <section class="explainer">
     <h1>Step Calculator</h1>
-    <p class="sub">Steps to distance, distance to calories, calories to weight. No age input — age isn't in the equation.</p>
+    <p class="sub">Steps in, calories out. No age field, because age isn't in the equation.</p>
 
-    <h3>Where "10,000 steps" came from</h3>
+    <h3>10,000 steps is a 1965 ad slogan</h3>
     <p>
-      Not a study. A 1965 Japanese pedometer was sold as the <em>manpo-kei</em> — literally
-      "10,000-step meter." The name was marketing, the number stuck, and sixty years later
-      it's treated as a clinical threshold.
+      A Japanese pedometer was sold as the <em>manpo-kei</em>, "10,000-step meter."
+      That's the whole origin. No study.
     </p>
     <p>
-      The "personalized step target for your age and weight" calculators in ads are usually
-      running this same reverse calculation backwards from a calorie figure, then presenting
-      the result as a formula. This page runs that calculation too — it just shows you the
-      formula instead of hiding it.
+      Calculators promising a step target "for your age and weight" divide a calorie number
+      by a step cost. So does this one. You can just see the division.
     </p>
 
-    <h3>What actually determines the burn</h3>
+    <h3>What the burn depends on</h3>
+    <p>Mass, distance, gradient. Nothing else.</p>
     <p>
-      Mass, distance, and gradient. That's it. The ACSM walking equation gives oxygen cost as
-      <code>VO₂ = 0.1·v + 1.8·v·g + 3.5</code> ml/kg/min, where <code>v</code> is speed in
-      m/min and <code>g</code> is the grade. Drop the resting <code>3.5</code> to get net
-      cost, convert to distance, and the speed term cancels out entirely:
+      The ACSM walking equation puts oxygen cost at <code>VO₂ = 0.1·v + 1.8·v·g + 3.5</code>
+      ml/kg/min, with <code>v</code> in m/min and <code>g</code> the grade. Drop the resting
+      <code>3.5</code> for net cost, convert to distance, and speed cancels:
     </p>
     <p class="formula">net kcal = (0.5 + 9g) × weight_kg × km</p>
-    <p>On flat ground that collapses to the familiar <code>0.5 × kg × km</code>. Two things fall out of this that most step advice gets wrong:</p>
+    <p>Flat ground, that's <code>0.5 × kg × km</code>.</p>
     <ul>
       <li>
-        <strong>Pace doesn't change calories per step.</strong> Walking briskly burns the same
-        energy per kilometer as strolling — you just finish sooner. Speed only matters for
-        time-based targets, or once you cross into running.
+        <strong>Pace is not in it.</strong> Brisk walking burns the same per kilometer as
+        strolling. You finish sooner, that's all.
       </li>
       <li>
-        <strong>Incline is the real multiplier.</strong> A 5% grade nearly doubles the cost
-        per meter. Hills beat hustle.
+        <strong>Incline is.</strong> A 5% grade nearly doubles the cost per meter. Hills beat
+        hustle.
       </li>
       <li>
-        <strong>Age does nothing here.</strong> Moving mass over distance is mechanics. Age
-        affects how a walk <em>feels</em> — heart rate, recovery, joint tolerance — not the
-        work performed.
+        <strong>Age is not.</strong> Moving mass over distance is mechanics. Age changes how a
+        walk feels, not the work done.
       </li>
     </ul>
 
-    <h3>Net, not gross</h3>
+    <h3>These are net calories</h3>
     <p>
-      This page reports <strong>net</strong> calories — energy spent above resting. Gross
-      figures are bigger and look better in marketing, but they include the calories you'd
-      have burned sitting on the sofa. Subtracting those from your intake counts them twice.
+      Net means above resting. Gross numbers are bigger and look better, but they count
+      calories you'd burn on the sofa. Subtract those from your intake and you've counted
+      them twice.
     </p>
 
-    <h3>Calories to actual weight</h3>
+    <h3>Why the loss slows</h3>
     <p>
-      Roughly <code>7,700 kcal ≈ 1 kg</code> of fat (the "3,500 calories per pound" rule).
-      It holds for a few weeks, then degrades: a lighter body burns less doing the identical
-      walk, and appetite compensates. Real loss bends away from the straight line — which is
-      why the table below shows both the naive projection and a decayed one.
+      <code>7,700 kcal ≈ 1 kg</code> of fat. Holds for a few weeks. Then a lighter body burns
+      less on the same walk, and appetite fills part of the gap.
     </p>
+    <p>The table shows both lines. At one year the honest one is about half the naive one.</p>
     <p>
-      There is no step count that "unlocks" fat loss. More steps burn more calories, on a
-      near-linear curve. The threshold framing is invented.
+      No step count unlocks fat loss. More steps, more calories, near-linear. The threshold
+      is invented.
     </p>
 
     <h3>Limits</h3>
     <p>
-      Valid for walking at about 3–6 km/h on measured ground. Running costs more per meter
-      (~1 kcal/kg/km). Stride length is estimated from height at the standard 0.414 ratio —
-      override it if you've actually measured yours, since distance error propagates straight
-      into every number on this page.
+      Walking, 3–6 km/h, measured ground. Running costs more per meter, about 1 kcal/kg/km.
+      Stride comes from <code>height × 0.414</code>, a population average. Measure yours if
+      you can: stride error scales every number here.
     </p>
   </section>
 
