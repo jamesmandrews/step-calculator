@@ -59,7 +59,7 @@ The projection table shows both: the naive linear figure, and a decayed figure a
 ## Features
 
 - **Steps → calories** — distance, net burn, walking time, kcal per 1,000 steps
-- **Calories → steps** — enter a calorie target, or pick from 13 food items with portion sizes
+- **Calories → steps** — enter a calorie target, or pick from 14 food items with portion sizes
 - **Projection table** — deficit and weight change at 1 week through 1 year, naive and decayed
 - **Rate → steps** — target loss per week, converted to a daily step requirement
 - **Metric / imperial toggle** — converts every entered value on switch
